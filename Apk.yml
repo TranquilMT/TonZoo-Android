@@ -1,0 +1,43 @@
+name: Build Android APK (TWA)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (not strictly needed)
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Bubblewrap (TWA builder)
+        run: npm i -g @bubblewrap/cli
+
+      - name: Build TWA APK
+        env:
+          SITE_URL: https://TranquilMT.github.io/tonzoo-apk/
+        run: |
+          mkdir twa && cd twa
+          bubblewrap init --manifest=${SITE_URL}site.webmanifest --directory=app --overwrite
+          cd app
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TonZoo-APK
+          path: twa/app/app/build/outputs/apk/debug/app-debug.apk
